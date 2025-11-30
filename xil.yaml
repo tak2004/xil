@@ -1,0 +1,8 @@
+apiVersion: v1beta1
+name: xil
+description: Crossplatform intermediate language toolchain.
+type: app
+version: 1.0.0
+appVersion: dev
+files:
+- main.xil

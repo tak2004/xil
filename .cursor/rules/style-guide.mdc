@@ -1,0 +1,5 @@
+---
+globs: *.xil
+alwaysApply: false
+---
+Prefer using camelCase for variable names

@@ -1,0 +1,9 @@
+apiVersion: v1beta1
+name: xil examples
+description: Crossplatform intermediate language examples.
+type: app
+version: 1.0.0
+appVersion: dev
+files:
+- 0001.txt
+- 0002.txt

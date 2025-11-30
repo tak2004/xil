@@ -1,0 +1,95 @@
+enum EdgeType: byte {
+    Unknown = 0;     # src-sink combination can't be determine.
+    ParentChild = 1; # Point to another Edge.
+    String = 2;      # Point to the StringList section.
+    TextView = 3;    # Point to the TextViewList section.
+    Constant = 4;    # Point to the constant binary data section.
+}
+
+enum NodeType: byte {
+    Unknown = 0;
+    Unit = 1;
+    Module = 2;
+    Use = 3;
+    Function = 4;
+    Type = 5;
+    FunctionArgument = 6;
+    Statement = 7;
+    ID = 8;
+    ffi = 9;
+
+    Library = 14;
+    ImportLibrary = 15;
+# Early phase placeholder for all integer and float types, stored in the string section.
+    Number = 12;
+    Boolean = 13;
+# Builtin number types replace a Number type as early as possible and get stored in the constant section.
+    Integer8 = 17;
+    Integer16 = 18;
+    Integer32 = 19;
+    Integer64 = 20;
+    UnsignedInteger8  = 21;
+    UnsignedInteger16 = 22;
+    UnsignedInteger32 = 23;
+    UnsignedInteger64 = 24;
+    Float32 = 25;
+    Float64 = 26;
+# Builtin string type replace a ID type as early as possible and get stored in the constant section.    
+    String = 27;
+# Builtin pointer type.    
+    Pointer= 28;
+# IR operations.
+    OpIf = 246;
+    OpLabel = 247;
+    OpCmp = 249;
+    OpCall = 255;
+}
+
+# The abstract syntax graph(asg) is implemented as a flat asg
+# which means only edges are stored as array. 
+# Nodes exist only as IDs, defined by the edges.
+# During the parsing the node ID is increasing which means that
+# you can get the right order of structure fields and function 
+# expressions by comparing the sink_id.
+# The flat ASG need less data by string deduplication.
+# The flat ASG is more cache friendly because of serial access.
+# The flat ASG can utilize all kind of RDB optimizations.
+# The flat ASG don't need recursion or multiple level of loops.
+# The flat ASG can be interpreted as byte-code VM.
+struct Edge {
+    uint16 src_id;
+    uint16 sink_id;
+    NodeType src_type;
+    NodeType sink_type;
+    EdgeType type;
+}
+
+# The code is split into tokens, each represented by a TextView
+# and String element. The token creates a Edge for each of them.
+# The TextView is split from the String because the information
+# are just needed if the code need to reference a node in the code.
+# A code base with no errors or warnings doesn't access this data.
+# The Edges could be sorted by EdgeType and stop the processing
+# as soon the first EdgeKind.TextView is encountered.
+struct TextView {
+    uint32 row;
+    uint32 column;
+}
+
+struct EdgeList {
+    Edge[] elements;
+}
+
+struct TextViewList {
+    TextView[] elements;
+}
+
+struct StringList {
+    string[] elements;
+}
+
+struct AbstractSyntaxGraph {
+    uint32 EdgeListBytes;
+    uint32 TextViewListBytes;
+    uint32 StringListBytes;
+}

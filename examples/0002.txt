@@ -1,0 +1,16 @@
+[module app]
+[use builtin]
+
+[lib "KERNEL32.DLL"]
+exit="ExitProcess"
+
+[ffi]
+exit=(code:i32)void
+
+[fun.main]
+args=argn:i32, argv:ptr
+cmp=argn, 1
+if=1,no_args
+call=exit,0
+label=no_args
+call=exit,1
