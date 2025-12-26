@@ -117,6 +117,7 @@ args=argn:i32, argv:ptr
 * ffi
 * fun
 * struct
+* type
 
 The syntax is designed in reverse by writing a lexer and parser with SIMD and adjusting it step by step to achive higher processing throughput. The C++ test code utilized SSE2 and SSE4.2 (https://www.felixcloutier.com/x86/pcmpistrm) in combination with needle optimization it achieves nearly memory bandwidth speed in the lexer phase. Using multithreading in any way makes no sence and slows down the lexer. Assign one file per worker returns the best results even on a 200MB large test file.
 Instead of interpreting each byte it interprets 32 bytes and categorize them as letters, digits, hexes, TERMINALS and so on and returns a equially large bytestream with bitsets. The next stage can create an edge list with node types representing tokens.

@@ -1,0 +1,15 @@
+[module app]
+
+[lib "KERNEL32.DLL"]
+writeConsoleA="WriteConsoleA"
+getStdHandle="GetStdHandle"
+
+[ffi]
+writeConsoleA=(ConsoleOutput:ptr, Buffer:ptr, NumberOfCharsToWrite:u32, NumberOfCharsWritten:ptr, Reserved:ptr)i32
+getStdHandle=(StdHandle:i32)ptr
+
+[fun print]
+decl=(text:ptr, bytes:i32)void
+call=getStdHandle,-11
+move=handle
+call=writeConsoleA,handle,text,bytes,0,0

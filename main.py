@@ -4,7 +4,6 @@ import asg_utils
 import yaml
 from pathlib import Path
 
-
 def validate_yaml(yaml_data: dict) -> None:
     """
     Validates YAML data for required fields and their types.
@@ -70,25 +69,29 @@ def load_yaml(file_path: str | Path) -> dict:
     with open(file_path, 'r', encoding='utf-8') as file:
         return yaml.safe_load(file)
 
-
 if __name__ == "__main__":
-   try:
+    try:
       yaml_data = load_yaml('xil.yaml')
       validate_yaml(yaml_data)      
-   except FileNotFoundError as e:
+    except FileNotFoundError as e:
       print(f"Error loading YAML file: {e}")
       exit(1)
-   except yaml.YAMLError as e:
+    except yaml.YAMLError as e:
       print(f"Error parsing YAML file: {e}")
       exit(1)
-   except ValueError as e:
+    except ValueError as e:
       print(f"Validation error: {e}")
       exit(1)
-   for file in yaml_data['files']:
+
+    python_objects = []
+    for file in yaml_data['files']:
       filename = Path(file).name
       with open(filename, 'r', encoding='utf-8') as f:
          content = f.read()
          python_object = translator.translate(filename, content)
-         graph = translator.python_object_to_graph(python_object)
-         asg_utils.graph_to_mermaid(graph)
-         virtual_machine.run(graph)
+         python_objects.append(python_object)
+         #graph = translator.python_object_to_graph(python_object)
+         #asg_utils.graph_to_mermaid(graph)
+    modules = asg_utils.generateModules(python_objects)
+    for module in modules:
+      virtual_machine.run(module)

@@ -25,7 +25,7 @@ def translate(file, content):
             currentBlock = 'lib'
         elif line.startswith('[ffi]'):
             currentBlock = 'ffi'
-        elif line.startswith('[fun.') and line.endswith(']'):
+        elif line.startswith('[fun') and line.endswith(']'):
             fun[line[5:-1]] = []
             current_fun = fun[line[5:-1]]
             currentBlock = 'fun'
@@ -50,60 +50,77 @@ def translate(file, content):
             current_fun.append({'label':line.split('=')[1]})
           elif line.startswith('call='):
             current_fun.append({'call':line[5:].split(',')})
+          elif line.startswith('move='):
+            current_fun.append({'move':line[5:].strip()})
+          elif line.startswith('const='):
+            current_fun.append({'const':line[6:].split(',')})
           elif line.startswith('if='):
             current_fun.append({'if':line[3:].split(',')})
           elif line.startswith('cmp='):
             current_fun.append({'cmp':line[4:].split(',')})
-          elif line.startswith('args='):
-            current_fun.append({
-                'args':[
-                    {'name':arg.split(':')[0], 
-                     'type':arg.split(':')[1]} for arg in line[5:].split(',')]})
+          elif line.startswith('decl='):
+            # Parse decl=(arg1:type1,arg2:type2)retType
+            decl_str = line[5:].strip()
+            if decl_str.startswith('(') and ')' in decl_str:
+                args_part = decl_str[1:decl_str.index(')')]
+                ret_part = decl_str[decl_str.index(')')+1:]
+                args = [arg.strip() for arg in args_part.split(',')] if args_part.strip() else []
+                current_fun.append({
+                    'decl': [
+                        {'name': arg.split(':')[0].strip(), 
+                         'type': arg.split(':')[1].strip()} for arg in args if ':' in arg
+                    ],
+                    'retType': ret_part.strip()
+                })
+            else:
+                print("Parse error: Unexpected decl declaration: ", line)
           else:
             print("Parse error: Unexpected instruction: ", line)
         else:
             print("Parse error: Unexpected line: ",  line)
     return {'unit': file, 'module':module, 'use':use, 'libs':libs, 'ffi':ffi, 'fun':fun}
 
+def isNumber(arg):
+    return arg.isdigit()
+
+def isStringLiteral(arg):
+    return arg.startswith('"') and arg.endswith('"')
 
 def processStatement(stmt, asg, nt_counter):
     nt_counter[NodeType.STATEMENT] += 1
     asg['edges'].elements.append(Edge(src_id=nt_counter[NodeType.STATEMENT], sink_id=nt_counter[NodeType.FUNCTION], src_type=NodeType.STATEMENT, sink_type=NodeType.FUNCTION, type=EdgeType.PARENTCHILD))
-    if 'label' in stmt and stmt['label']:
-        nt_counter[NodeType.OPLABEL] += 1
-        asg['edges'].elements.append(Edge(src_id=nt_counter[NodeType.OPLABEL], sink_id=nt_counter[NodeType.STATEMENT], src_type=NodeType.OPLABEL, sink_type=NodeType.STATEMENT, type=EdgeType.PARENTCHILD))
-        asg['edges'].elements.append(Edge(src_id=nt_counter[NodeType.OPLABEL], sink_id=len(asg['strings'].elements), src_type=NodeType.OPLABEL, sink_type=NodeType.ID, type=EdgeType.STRING))
-        asg['strings'].elements.append(stmt['label'])
-    elif 'call' in stmt and stmt['call']:
-        nt_counter[NodeType.CALL] += 1
-        asg['edges'].elements.append(Edge(src_id=nt_counter[NodeType.OPCALL], sink_id=nt_counter[NodeType.FUNCTION], src_type=NodeType.CALL, sink_type=NodeType.FUNCTION, type=EdgeType.PARENTCHILD))
-    elif 'if' in stmt and stmt['if']:
-        asg['edges'].elements.append(Edge(src_id=nt_counter[NodeType.IF], sink_id=nt_counter[NodeType.FUNCTION], src_type=NodeType.IF, sink_type=NodeType.FUNCTION, type=EdgeType.PARENTCHILD))    
-        asg['edges'].elements.append(Edge(src_id=nt_counter[NodeType.IF], sink_id=len(asg['strings'].elements), src_type=NodeType.IF, sink_type=NodeType.ID, type=EdgeType.STRING))
-        asg['strings'].elements.append(stmt['if'])
-        nt_counter[NodeType.IF] += 1
-    elif 'cmp' in stmt and stmt['cmp']:
-        asg['edges'].elements.append(Edge(src_id=nt_counter[NodeType.CMP], sink_id=nt_counter[NodeType.FUNCTION], src_type=NodeType.CMP, sink_type=NodeType.FUNCTION, type=EdgeType.PARENTCHILD))  
-        asg['edges'].elements.append(Edge(src_id=nt_counter[NodeType.CMP], sink_id=len(asg['strings'].elements), src_type=NodeType.CMP, sink_type=NodeType.ID, type=EdgeType.STRING))
-        asg['strings'].elements.append(stmt['cmp'])
-        nt_counter[NodeType.CMP] += 1
-    elif 'args' in stmt and stmt['args']:
-        asg['edges'].elements.append(Edge(src_id=nt_counter[NodeType.ARGS], sink_id=nt_counter[NodeType.FUNCTION], src_type=NodeType.ARGS, sink_type=NodeType.FUNCTION, type=EdgeType.PARENTCHILD))
-        asg['edges'].elements.append(Edge(src_id=nt_counter[NodeType.ARGS], sink_id=len(asg['strings'].elements), src_type=NodeType.ARGS, sink_type=NodeType.ID, type=EdgeType.STRING))
-        asg['strings'].elements.append(stmt['args'])
-        nt_counter[NodeType.ARGS] += 1
-        for arg in stmt['args']:
-            nt_counter[NodeType.FUNCTIONARGUMENT] += 1
-            asg['edges'].elements.append(Edge(src_id=nt_counter[NodeType.FUNCTIONARGUMENT], sink_id=nt_counter[NodeType.ARGS], src_type=NodeType.FUNCTIONARGUMENT, sink_type=NodeType.ARGS, type=EdgeType.PARENTCHILD))
-            asg['edges'].elements.append(Edge(src_id=nt_counter[NodeType.FUNCTIONARGUMENT], sink_id=len(asg['strings'].elements), src_type=NodeType.FUNCTIONARGUMENT, sink_type=NodeType.ID, type=EdgeType.STRING))
-            asg['strings'].elements.append(arg['name'])
-            nt_counter[NodeType.TYPE] += 1
-            asg['edges'].elements.append(Edge(src_id=nt_counter[NodeType.TYPE], sink_id=nt_counter[NodeType.FUNCTIONARGUMENT], src_type=NodeType.TYPE, sink_type=NodeType.FUNCTIONARGUMENT, type=EdgeType.PARENTCHILD))
-            asg['edges'].elements.append(Edge(src_id=nt_counter[NodeType.TYPE], sink_id=len(asg['strings'].elements), src_type=NodeType.TYPE, sink_type=NodeType.ID, type=EdgeType.STRING))
-            asg['strings'].elements.append(arg['type'])
+    # Lookup-Tabelle von String auf NodeType OP-Werte
+    op_to_nodetype = {
+        'cmp': NodeType.OPCMP,
+        'call': NodeType.OPCALL,
+        'if': NodeType.OPIF,
+        'label': NodeType.OPLABEL,
+    }
+    for key, value in stmt.items():
+        if key in op_to_nodetype:
+            nt_counter[op_to_nodetype[key]] += 1
+            asg['edges'].elements.append(Edge(src_id=nt_counter[op_to_nodetype[key]], sink_id=nt_counter[NodeType.STATEMENT], src_type=op_to_nodetype[key], sink_type=NodeType.STATEMENT, type=EdgeType.PARENTCHILD))
+            for arg in value:
+                nt_counter[NodeType.FUNCTIONARGUMENT] += 1
+                asg['edges'].elements.append(Edge(src_id=nt_counter[NodeType.FUNCTIONARGUMENT], sink_id=nt_counter[op_to_nodetype[key]], src_type=NodeType.FUNCTIONARGUMENT, sink_type=op_to_nodetype[key], type=EdgeType.PARENTCHILD))
+                if isNumber(arg):
+                    nt_counter[NodeType.NUMBER] += 1
+                    asg['edges'].elements.append(Edge(src_id=nt_counter[NodeType.NUMBER], sink_id=nt_counter[NodeType.FUNCTIONARGUMENT], src_type=NodeType.NUMBER, sink_type=NodeType.FUNCTIONARGUMENT, type=EdgeType.STRING))
+                    asg['edges'].elements.append(Edge(src_id=nt_counter[NodeType.NUMBER], sink_id=len(asg['strings'].elements), src_type=NodeType.NUMBER, sink_type=NodeType.ID, type=EdgeType.STRING))
+                    asg['strings'].elements.append(arg)
+                elif isStringLiteral(arg):
+                    nt_counter[NodeType.STRING] += 1
+                    asg['edges'].elements.append(Edge(src_id=nt_counter[NodeType.STRING], sink_id=nt_counter[NodeType.FUNCTIONARGUMENT], src_type=NodeType.STRING, sink_type=NodeType.FUNCTIONARGUMENT, type=EdgeType.PARENTCHILD))
+                    asg['edges'].elements.append(Edge(src_id=nt_counter[NodeType.STRING], sink_id=len(asg['strings'].elements), src_type=NodeType.STRING, sink_type=NodeType.ID, type=EdgeType.STRING))
+                    asg['strings'].elements.append(arg)
+                else:
+                    nt_counter[NodeType.ID] += 1
+                    asg['edges'].elements.append(Edge(src_id=nt_counter[NodeType.ID], sink_id=nt_counter[NodeType.FUNCTIONARGUMENT], src_type=NodeType.ID, sink_type=NodeType.FUNCTIONARGUMENT, type=EdgeType.PARENTCHILD))
+                    asg['edges'].elements.append(Edge(src_id=nt_counter[NodeType.ID], sink_id=len(asg['strings'].elements), src_type=NodeType.ID, sink_type=NodeType.ID, type=EdgeType.STRING))
+                    asg['strings'].elements.append(arg)
 
 def python_object_to_graph(object):
-    print(object)
+    #print(object)
     edges = EdgeList([])
     strings = StringList([])
     textViews = TextViewList([])

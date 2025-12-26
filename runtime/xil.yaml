@@ -1,0 +1,8 @@
+apiVersion: v1beta1
+name: xil runtime
+description: Providing runtime library to execute xil code.
+type: library
+version: 1.0.0
+appVersion: dev
+files:
+- main.xil
