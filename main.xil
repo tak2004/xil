@@ -10,11 +10,11 @@ exit=(code:i32)void
 [fun main]
 decl=(argn:i32,argv:ptr)void
 cmp=argn,0
-if=1, no_args
+if=1, noArgs
 const=hello, "Hello world!"
 call=print,hello.ptr,hello.bytes
 call=exit,0
-label=no_args
+label=noArgs
 const=help, "xil runtime: 0.1\nvm [filename]"
 call=print,help.ptr,help.bytes
 call=exit,1

@@ -13,7 +13,14 @@ def translate(file, content):
 
     for line in lines:
         if line.startswith('[module') and line.endswith(']'):
-            module = line[7:-1].split(' ')[1]
+            # Parse module name safely: [module name] or [module]
+            module_part = line[7:-1].strip()  # Remove '[module' and ']'
+            if module_part:
+                # Split by space and take the last part (handles [module name] and [module name extra])
+                parts = module_part.split()
+                module = parts[0] if parts else None
+            else:
+                module = None
             currentBlock = 'module'
         elif line.startswith('[use') and line.endswith(']'):
             use.append(line[5:-1])
@@ -37,8 +44,8 @@ def translate(file, content):
             if value.startswith('(') and value.index(')') != -1:
                 args = value[1:value.index(')')].split(',')
                 ret = value[value.index(')')+1:]
-                decl['args'] = [{'name':arg.split(':')[0], 'type':arg.split(':')[1]} for arg in args]
-                decl['returns'] = ret
+                decl['args'] = [{'name':arg.split(':')[0].strip(), 'type':arg.split(':')[1].strip()} for arg in args if ':' in arg]
+                decl['returns'] = ret.strip()
             else:
                 print("Parse error: Unexpected ffi declaration: ", line)
             ffi[key]=decl

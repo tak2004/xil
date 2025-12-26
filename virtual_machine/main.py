@@ -61,7 +61,7 @@ def _generate_ffi_functions(module):
         
         # Set argument types
         arg_types = []
-        for arg in func_decl.get('decl', []):
+        for arg in func_decl.get('args', []):
             arg_type = _map_type_to_ctypes(arg['type'])
             if arg_type is not None:
                 arg_types.append(arg_type)
@@ -152,9 +152,8 @@ def _parse_value(value, locals_dict, constants):
     # Return as string identifier (might be used later)
     return value
 
- # Funktion zur Verarbeitung von String-Literalen mit Ersetzung von '\n' durch Linebreaks
 def _process_string_literal(s):
-    # Ersetzt '\n' (escaptes) durch echte Zeilenumbrüche
+    """Process string literals by replacing escaped newlines with actual newlines"""
     return s.replace('\\n', '\n')
 
 def _parse_const_value(value_str):
