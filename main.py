@@ -71,8 +71,13 @@ def load_yaml(file_path: str | Path) -> dict:
 
 if __name__ == "__main__":
     try:
-      yaml_data = load_yaml('xil.yaml')
-      validate_yaml(yaml_data)      
+      yaml_file_path = Path('xil.yaml')
+      yaml_data = load_yaml(yaml_file_path)
+      validate_yaml(yaml_data)
+      
+      # Get the directory of the YAML file to resolve relative paths
+      yaml_dir = yaml_file_path.parent
+      
     except FileNotFoundError as e:
       print(f"Error loading YAML file: {e}")
       exit(1)
@@ -85,10 +90,14 @@ if __name__ == "__main__":
 
     python_objects = []
     for file in yaml_data['files']:
-      filename = Path(file).name
-      with open(filename, 'r', encoding='utf-8') as f:
+      # Resolve file path relative to YAML file's directory
+      file_path = (yaml_dir / file).resolve()
+      if not file_path.exists():
+        print(f"Error: File not found: {file_path}")
+        exit(1)
+      with open(file_path, 'r', encoding='utf-8') as f:
          content = f.read()
-         python_object = translator.translate(filename, content)
+         python_object = translator.translate(file_path.name, content)
          python_objects.append(python_object)
          #graph = translator.python_object_to_graph(python_object)
          #asg_utils.graph_to_mermaid(graph)

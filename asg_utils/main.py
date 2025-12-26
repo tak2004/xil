@@ -38,13 +38,25 @@ def generateModules(python_objects):
                     merged['libs'][lib_name] = {}
                 merged['libs'][lib_name].update(lib_content)
         
-        # Merge ffi dictionaries
+        # Merge ffi dictionaries (raise error on duplicate names)
         for obj in objects:
-            merged['ffi'].update(obj.get('ffi', {}))
+            for ffi_name, ffi_decl in obj.get('ffi', {}).items():
+                if ffi_name in merged['ffi']:
+                    raise ValueError(
+                        f"Duplicate FFI declaration '{ffi_name}' found in module '{module}'. "
+                        f"Conflicting units: {[u for u in merged['unit'] if u]}"
+                    )
+                merged['ffi'][ffi_name] = ffi_decl
         
-        # Merge fun dictionaries
+        # Merge fun dictionaries (raise error on duplicate names)
         for obj in objects:
-            merged['fun'].update(obj.get('fun', {}))
+            for fun_name, fun_decl in obj.get('fun', {}).items():
+                if fun_name in merged['fun']:
+                    raise ValueError(
+                        f"Duplicate function '{fun_name}' found in module '{module}'. "
+                        f"Conflicting units: {[u for u in merged['unit'] if u]}"
+                    )
+                merged['fun'][fun_name] = fun_decl
         
         merged_objects.append(merged)
     return merged_objects
