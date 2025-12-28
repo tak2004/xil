@@ -77,8 +77,8 @@ writeConsoleA=(ConsoleOutput:ptr, Buffer:ptr, NumberOfCharsToWrite:u32, NumberOf
 [module app]
 
 [lib "KERNEL32.DLL"]
-writeConsoleA = "WriteConsoleA"
+writeConsoleA="WriteConsoleA"
 
 [ffi]
-writeConsoleA = (ConsoleOutput:ptr, Buffer:ptr, NumberOfCharsToWrite:u32, NumberOfCharsWritten:ptr, Reserved:ptr)i32
+writeConsoleA=(ConsoleOutput:ptr, Buffer:ptr, NumberOfCharsToWrite:u32, NumberOfCharsWritten:ptr, Reserved:ptr)i32
 ```
