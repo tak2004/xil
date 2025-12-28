@@ -1,0 +1,39 @@
+// xil Grammar für Lark
+?start: unit
+
+unit: module (use | function | ffi | library | type | comment_line)*
+
+module: "[" "module" ID "]" -> module
+use: "[" "use" ID "]" -> use
+library: "[" "lib" STRLIT "]" import_line*
+function: "[" "fun" ID "]" statement*
+ffi: "[" "ffi" "]" cdecl_line*
+type: "[" "type" ID "]" type_statement*
+type_statement: TYPE_KEY "=" SIGNED_NUMBER -> type_statement
+
+import_line: ID "=" (ID | STRLIT) -> import_line
+cdecl_line: ID "=" "(" arg_list ")" ID  -> cdecl
+arg_list: (arg ("," arg)*)?
+arg: (ID|ID_PROPERTY) ":" (ID|ID_PROPERTY)
+
+statement: decl_statement | normal_statement
+decl_statement: "decl" "=" "(" arg_list ")" ID -> decl_statement
+normal_statement: OP "=" arg_list_statement -> statement
+arg_list_statement: (arg_value ("," arg_value)*)?
+arg_value: ID | NUMBER | STRLIT | SIGNED_NUMBER | ID_PROPERTY
+
+comment_line: COMMENT -> comment
+
+ID_PROPERTY: ID "." ID
+
+OP: "call" | "move" | "cmp" | "if" | "label" | "const" | "decl"
+TYPE_KEY: "bytes" | "align"
+ID: /[a-zA-Z_][a-zA-Z0-9_]*/
+NUMBER: /[0-9]+/
+SIGNED_NUMBER: /-?[0-9]+/
+STRLIT: /"[^"]*"/
+COMMENT: /[#;].*/
+
+%import common.NEWLINE
+%import common.WS
+%ignore WS

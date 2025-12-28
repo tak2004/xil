@@ -1,4 +1,5 @@
 [module app]
+
 [use builtin]
 
 [lib "KERNEL32.DLL"]
@@ -8,13 +9,13 @@ exit="ExitProcess"
 exit=(code:i32)void
 
 [fun main]
-decl=(argn:i32,argv:ptr)void
-cmp=argn,0
+decl=(argn:i32, argv:ptr)void
+cmp=argn, 0
 if=1, noArgs
 const=hello, "Hello world!"
-call=print,hello.ptr,hello.bytes
-call=exit,0
+call=print, hello.ptr, hello.bytes
+call=exit, 0
 label=noArgs
 const=help, "xil runtime: 0.1\nvm [filename]"
-call=print,help.ptr,help.bytes
-call=exit,1
+call=print, help.ptr, help.bytes
+call=exit, 1

@@ -1,0 +1,47 @@
+# Formatierungsregeln für xil-Code
+
+indentation:
+  size: 0  # xil verwendet keine Einrückung
+  char: " "
+
+spacing:
+  after_comma: true     # Leerzeichen nach Komma
+  before_comma: false   # Kein Leerzeichen vor Komma
+
+line_breaks:
+  after_section_header: true  # Leerzeile nach [module], [fun], etc.
+
+formatting:
+  max_line_length: 88
+  normalize_quotes: true     # Normalisiere Anführungszeichen
+  quote_style: "double"      # "double" oder "single"
+
+sections:
+  module:
+    format: "[module {name}]"
+  use:
+    format: "[use {name}]"
+  lib:
+    format: "[lib {name}]"
+  fun:
+    format: "[fun {name}]"
+  ffi:
+    format: "[ffi]"
+  type:
+    format: "[type {name}]"
+
+statements:
+  call:
+    format: "call={args}"
+  move:
+    format: "move={value}"
+  decl:
+    format: "decl={args}"
+  cmp:
+    format: "cmp={args}"
+  if:
+    format: "if={args}"
+  const:
+    format: "const={args}"
+  label:
+    format: "label={value}"
